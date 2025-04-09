@@ -1,0 +1,176 @@
+﻿@model SalesPro.Models.SaleViewModel
+
+@{
+    ViewData["Title"] = "SalesForm";
+}
+
+
+<div class="container mt-4">
+    <h3>Sales Entry</h3>
+    <form id="salesForm">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label>Date</label>
+                <input type="date" class="form-control" id="SaleDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-4">
+                <label>Customer</label>
+            
+                <select class="form-control" id="CustomerId" aria-label="Default select example" asp-items="ViewBag.Customers">
+                    <option selected>Select customer</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Product</label>
+                <select class="form-control" id="ProductId" aria-label="Default select example" asp-items="ViewBag.Products">
+                    <option selected>Select product</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label>Qty</label>
+                <input type="number" class="form-control" id="Qty" />
+            </div>
+            <div class="col-md-2">
+                <label>Rate</label>
+                <input type="text" class="form-control" id="Rate" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-info" onclick="addToTable()">Add to Table</button>
+            </div>
+        </div>
+
+        <table class="table table-bordered" id="saleTable">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="d-flex flex-column justify-content-end flex-grow-1 mt-4">
+
+            <div class="col-md-3">
+                <label>Total Qty</label>
+                <input type="text" id="TotalQty" class="form-control" readonly />
+            </div>
+            <div class="col-md-3">
+                <label>Gross Total</label>
+                <input type="text" id="GrossTotal" class="form-control" readonly />
+            </div>
+            <div class="col-md-3">
+                <label>Add Charges</label>
+                <input type="text" id="AddCharges" class="form-control" value="0" />
+            </div>
+            <div class="col-md-3">
+                <label>Less Discount</label>
+                <input type="text" id="LessDiscount" class="form-control" value="0" />
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-3">
+                <label>Net Total</label>
+                <input type="text" id="NetTotal" class="form-control" readonly />
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="button" class="btn btn-success" onclick="submitSales()">Save</button>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let saleItems = [];
+
+    $('#ProductId').on('change', function () {
+        const rate = $(this).find(':selected').data('rate');
+        $('#Rate').val(rate || '');
+    });
+
+    function addToTable() {
+        debugger;
+        const prodId = $('#ProductId').val();
+        const prodName = $('#ProductId option:selected').text();
+        const qty = parseInt($('#Qty').val());
+        const rate = parseFloat($('#Rate').val());
+
+        if (!prodId || !qty || !rate) return alert("Please fill in all fields.");
+
+        const amount = qty * rate;
+        saleItems.push({ prodId, prodName, qty, rate, amount });
+
+        updateTable();
+    }
+
+    function updateTable() {
+        let tbody = $('#saleTable tbody');
+        tbody.empty();
+
+        let totalQty = 0, grossTotal = 0;
+        saleItems.forEach((item, index) => {
+            totalQty += item.qty;
+            grossTotal += item.amount;
+            tbody.append(`
+                    <tr>
+                        <td>${item.prodName}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.rate}</td>
+                        <td>${item.amount}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="removeItem(${index})">Delete</button></td>
+                    </tr>
+                `);
+        });
+
+        $('#TotalQty').val(totalQty);
+        $('#GrossTotal').val(grossTotal);
+        calculateNetTotal();
+    }
+
+    function removeItem(index) {
+        saleItems.splice(index, 1);
+        updateTable();
+    }
+
+    $('#AddCharges, #LessDiscount').on('input', calculateNetTotal);
+
+    function calculateNetTotal() {
+        const gross = parseFloat($('#GrossTotal').val()) || 0;
+        const charges = parseFloat($('#AddCharges').val()) || 0;
+        const discount = parseFloat($('#LessDiscount').val()) || 0;
+        const net = gross + charges - discount;
+        $('#NetTotal').val(net);
+    }
+
+    function submitSales() {
+        debugger;
+        const saleData = {
+            SaleDate: $('#SaleDate').val(),
+            CustomerId: $('#CustomerId').val(),
+            Products: saleItems,
+            AddCharges: parseFloat($('#AddCharges').val()) || 0,
+            LessDiscount: parseFloat($('#LessDiscount').val()) || 0
+        };
+
+        $.ajax({
+            url: '/Home/Save',
+            type: 'POST',
+            data: JSON.stringify(saleData),
+            contentType: 'application/json',
+            success: function (saleId) {
+                alert('Sale saved!');
+                window.location.href = '/Home/Bill?id=' + saleId;
+            }
+        });
+    }
+</script>
+

@@ -1,0 +1,79 @@
+﻿
+@{
+    ViewData["Title"] = "AddCustomer";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">Add Customer</h2>
+    <form id="customerForm" class="row g-3">
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="CustomerName" name="CustomerName" placeholder="Enter customer name" required />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </form>
+
+    <hr class="my-4" />
+
+    <h3 class="mb-3">Customer List</h3>
+    <table id="customerTable" class="table table-bordered table-striped w-50">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            loadCustomers();
+
+            $("#customerForm").submit(function (e) {
+                e.preventDefault();
+
+                var customerName = $("#CustomerName").val();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/Create",
+                    data: { CustomerName: customerName },
+                    success: function (response) {
+                        $("#CustomerName").val("");
+                        addCustomerToTable(response);
+                    },
+                    error: function () {
+                        alert("Error saving customer.");
+                    }
+                });
+            });
+
+            function loadCustomers() {
+                debugger;
+                $.get("/Home/GetAll", function (data) {
+                    $("#customerTable tbody").empty();
+                    $.each(data, function (i, customers) {
+                        addCustomerToTable(customers);
+                    });
+                });
+            }
+
+            function addCustomerToTable(customers) {
+                debugger;
+                $("#customerTable tbody").append(
+                    `<tr>
+                        <td>${customers.customerId}</td>
+                        <td>${customers.customerName}</td>
+                    </tr>`
+                );
+            }
+        });
+    </script>
+}

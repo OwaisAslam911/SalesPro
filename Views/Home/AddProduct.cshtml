@@ -1,0 +1,89 @@
+﻿
+@{
+    ViewData["Title"] = "AddProduct";
+}
+
+<h1>AddProduct</h1>
+
+<div class="container mt-5">
+    <h2 class="mb-3">Add Product</h2>
+    <form id="productForm" class="row g-3">
+       
+        <div class="col-md-4">
+            <label for="ProductName" class="form-label">Product Name</label>
+            <input type="text" class="form-control" id="ProductName" name="ProductName" placeholder="Enter product name" required />
+        </div>
+        <div class="col-md-2">
+            <label for="Rate" class="form-label">Rate</label>
+            <input type="text" class="form-control" id="Rate" name="Rate" placeholder="Enter rate" required />
+        </div>
+        <div class="col-md-2 align-self-end">
+            <button type="submit" class="btn btn-success w-100">Save</button>
+        </div>
+    </form>
+
+    <hr class="my-4" />
+
+    <h3 class="mb-3">Product List</h3>
+    <table id="productTable" class="table table-bordered table-striped w-75">
+        <thead class="table-dark">
+            <tr>
+                <th>ProductId</th>
+                <th>Name</th>
+                <th>Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Products will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            loadProduct();
+            $("#productForm").submit(function (e) {
+                e.preventDefault();
+
+                var productData = {
+                    ProductName: $("#ProductName").val(),
+                    Rate: $("#Rate").val()
+                };
+               
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/CreateProduct", // update this to match your route
+                    data: productData,
+                    success: function (response) {
+                        addProductToTable(response);
+                        $("#productForm")[0].reset();
+                    },
+                    error: function () {
+                        alert("Error saving product.");
+                    }
+                });
+            });
+
+            function addProductToTable(product) {
+                debugger;
+                $("#productTable tbody").append(`
+                        <tr>
+                            <td>${product.productId}</td>
+                            <td>${product.productName}</td>
+                            <td>${product.rate}</td>
+                        </tr>
+                    `);
+            }
+            function loadProduct() {
+                debugger;
+                $.get("/Home/GetAllProducts", function (data) {
+                    $("#customerTable tbody").empty();
+                    $.each(data, function (i, product) {
+                        addProductToTable(product);
+                    });
+                });
+            }
+        });
+    </script>
+}
