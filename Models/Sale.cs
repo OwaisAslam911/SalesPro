@@ -65,3 +65,41 @@ public class SaleItem
     public decimal Rate { get; set; }
     public decimal Amount => Quantity * Rate;
 }
+public class SaleInfoData
+{
+    public int SaleId { get; set; }
+    public string CustomerName { get; set; }
+    public DateTime SaleDate { get; set; }
+    public int TotalQty { get; set; }
+    public decimal GrossTotal { get; set; }
+    public decimal AddCharges { get; set; }
+    public decimal Discount { get; set; }
+    public decimal NetTotal => GrossTotal + AddCharges - Discount;
+}
+
+public class SaleItemData
+{
+    public string ProductName { get; set; }
+    public int Quantity { get; set; }
+    public decimal Rate { get; set; }
+    public decimal Amount => Quantity * Rate;
+}
+public class ReportDataModel
+{
+    public string CustomerName { get; set; }
+    public string SaleDate { get; set; }
+    public List<ProductItem> Products { get; set; }
+    public int TotalQty { get; set; }
+    public decimal GrossTotal { get; set; }
+    public decimal AddCharges { get; set; }
+    public decimal LessDiscount { get; set; }
+    public decimal NetTotal { get; set; }
+}
+
+public class ProductItem
+{
+    public string ProductName { get; set; }
+    public int Quantity { get; set; }
+    public decimal Rate { get; set; }
+    public decimal Amount { get; set; }
+}

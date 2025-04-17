@@ -5,64 +5,166 @@
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4">Invoice</h2>
+    <div class="container mt-4" id="invoiceContent">
+        <h2 class="mb-4">Invoice</h2>
 
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <strong>Customer:</strong> @Model.CustomerName<br />
-            <strong>Date:</strong> @Model.SaleDate.ToString("yyyy-MM-dd")
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <strong>Customer:</strong> @Model.CustomerName<br />
+                <strong>Date:</strong> @Model.SaleDate.ToString("yyyy-MM-dd")
+            </div>
+            <div class="col-md-6 text-end">
+                <strong>Invoice #:</strong> @Model.SaleId
+            </div>
         </div>
-        <div class="col-md-6 text-end">
-            <strong>Invoice #:</strong> @Model.SaleId
+
+        <table class="table table-bordered" id="invoiceTable">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.SaleItems)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Rate</td>
+                        <td>@item.Amount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="row justify-content-end">
+            <div class="col-md-4">
+                <table class="table table-borderless" id="totalsTable">
+                    <tr>
+                        <th>Total Qty:</th>
+                        <td>@Model.TotalQty</td>
+                    </tr>
+                    <tr>
+                        <th>Gross Total:</th>
+                        <td>@Model.GrossTotal.ToString("0.00")</td>
+                    </tr>
+                    <tr>
+                        <th>Add Charges:</th>
+                        <td>@Model.AddCharges.ToString("0.00")</td>
+                    </tr>
+                    <tr>
+                        <th>Discount:</th>
+                        <td>@Model.Discount.ToString("0.00")</td>
+                    </tr>
+                    <tr class="fw-bold">
+                        <th>Net Total:</th>
+                        <td>@Model.NetTotal.ToString("0.00")</td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Product Name</th>
-                <th>Qty</th>
-                <th>Rate</th>
-                <th>Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.SaleItems)
-            {
-                <tr>
-                    <td>@item.ProductName</td>
-                    <td>@item.Quantity</td>
-                    <td>@item.Rate</td>
-                    <td>@item.Amount</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <div class="row justify-content-end">
-        <div class="col-md-4">
-            <table class="table table-borderless">
-                <tr>
-                    <th>Total Qty:</th>
-                    <td>@Model.TotalQty</td>
-                </tr>
-                <tr>
-                    <th>Gross Total:</th>
-                    <td>@Model.GrossTotal.ToString("0.00")</td>
-                </tr>
-                <tr>
-                    <th>Add Charges:</th>
-                    <td>@Model.AddCharges.ToString("0.00")</td>
-                </tr>
-                <tr>
-                    <th>Discount:</th>
-                    <td>@Model.Discount.ToString("0.00")</td>
-                </tr>
-                <tr class="fw-bold">
-                    <th>Net Total:</th>
-                    <td>@Model.NetTotal.ToString("0.00")</td>
-                </tr>
-            </table>
-        </div>
-    </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<button onclick="downloadPDF()" class="btn btn-danger">Export PDF</button>
+<button onclick="exportToExcel()" class="btn btn-success">Export Excel</button>
+
+<script>
+
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4'); // or 'a5'
+
+        const invoice = document.getElementById('invoiceContent'); // ✅ target only invoice section
+        await html2canvas(invoice).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            doc.save('invoice.pdf');
+        });
+    }
+
+</script>
+<script>
+    function exportToExcel() {
+        var invoiceContent = document.getElementById('invoiceContent');
+        var table = document.getElementById('invoiceTable'); 
+        var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'><th colspan='4'>Invoice</th></tr>";
+
+        // Add Customer Info (using safer selectors)
+        var customerInfoSection = document.querySelector('.container .row .col-md-6');
+        var rightSection = document.querySelector('.container .col-md-6.text-end');
+        if (customerInfoSection && rightSection) {
+            var customerParts = customerInfoSection.textContent.split('Date:');
+            var customerName = customerParts[0].trim();
+            var saleDate = customerParts[1] ? customerParts[1].trim() : '';
+            var invoiceNumberParts = rightSection.textContent.split('#:');
+            var invoiceNumber = invoiceNumberParts[1] ? invoiceNumberParts[1].trim() : '';
+            var customerInfo = `
+                <tr><td colspan="2"><strong>Customer:</strong> ${customerName}</td>
+                    <td colspan="2"><strong>Date:</strong> ${saleDate}</td></tr>
+                <tr><td colspan="4"><strong>Invoice #:</strong> ${invoiceNumber}</td></tr>
+            `;
+            tab_text += customerInfo;
+        }
+
+        tab_text += "<tr><th>Product Name</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>";
+        for (var i = 1; i < table.rows.length; i++) { 
+            var row = table.rows[i];
+            tab_text += "<tr>" +
+                "<td>" + row.cells[0].innerHTML + "</td>" +
+                "<td>" + row.cells[1].innerHTML + "</td>" +
+                "<td>" + row.cells[2].innerHTML + "</td>" +
+                "<td>" + row.cells[3].innerHTML + "</td>" +
+                "</tr>";
+        }
+
+        var totalsTable = document.getElementById('totalsTable');
+        if (totalsTable) {
+            tab_text += "<tr><td colspan='4'></td></tr>"; 
+            tab_text += `<tr><td colspan="4"><strong>Total Qty:</strong> ${totalsTable.rows[0].cells[1].textContent}</td></tr>`;
+            tab_text += `<tr><td colspan="4"><strong>Gross Total:</strong> ${totalsTable.rows[1].cells[1].textContent}</td></tr>`;
+            tab_text += `<tr><td colspan="4"><strong>Add Charges:</strong> ${totalsTable.rows[2].cells[1].textContent}</td></tr>`;
+            tab_text += `<tr><td colspan="4"><strong>Discount:</strong> ${totalsTable.rows[3].cells[1].textContent}</td></tr>`;
+            tab_text += `<tr><td colspan="4"><strong>Net Total:</strong> ${totalsTable.rows[4].cells[1].textContent}</td></tr>`;
+        } else {
+            console.error("Totals table not found.");
+        }
+
+        tab_text += "</table>";
+
+        tab_text = tab_text.replace(/<a[^>]*>|<\/a>/gi, "");
+        tab_text = tab_text.replace(/<img[^>]*>/gi, "");
+        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, "");
+
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ") > -1 || !!navigator.userAgent.match(/Trident.*rv\:11\./);
+        if (msie) {
+            var txtArea1 = document.createElement('iframe');
+            document.body.appendChild(txtArea1);
+            txtArea1.contentDocument.open("txt/html", "replace");
+            txtArea1.contentDocument.write(tab_text);
+            txtArea1.contentDocument.close();
+            txtArea1.contentWindow.focus();
+            txtArea1.contentDocument.execCommand("SaveAs", true, "invoice.xls");
+            document.body.removeChild(txtArea1);
+        } else {
+            var a = document.createElement('a');
+            a.href = 'data:application/vnd.ms-excel,' + encodeURIComponent(tab_text);
+            a.download = 'invoice.xls';
+            a.click();
+        }
+    }
+
+
+
+</script>
+

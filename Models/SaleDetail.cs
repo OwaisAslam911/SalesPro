@@ -33,8 +33,8 @@ public class SaleDTO
 public class SaleProductDTO
 {
     public int ProdId { get; set; }
-    public string ProdName { get; set; }
-    public int Qty { get; set; }
+    public string ProductName { get; set; }
+    public int Quantity { get; set; }
     public decimal Rate { get; set; }
     public decimal Amount { get; set; }
 }

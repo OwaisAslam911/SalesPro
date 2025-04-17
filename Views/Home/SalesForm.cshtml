@@ -4,7 +4,7 @@
     ViewData["Title"] = "SalesForm";
 }
 
-
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <div class="container mt-4">
     <h3>Sales Entry</h3>
     <form id="salesForm">
@@ -15,14 +15,14 @@
             </div>
             <div class="col-md-4">
                 <label>Customer</label>
-            
-                <select class="form-control" id="CustomerId" aria-label="Default select example" asp-items="ViewBag.Customers">
+                
+                <select class="form-control select2" id="CustomerId" aria-label="Default select example" asp-items="ViewBag.Customers">
                     <option selected>Select customer</option>
                 </select>
             </div>
             <div class="col-md-4">
                 <label>Product</label>
-                <select class="form-control" id="ProductId" aria-label="Default select example" asp-items="ViewBag.Products">
+                <select class="form-control select2" id="ProductId" aria-label="Default select example" asp-items="ViewBag.Products">
                     <option selected>Select product</option>
                 </select>
             </div>
@@ -54,42 +54,66 @@
             </thead>
             <tbody></tbody>
         </table>
-
-        <div class="d-flex flex-column justify-content-end flex-grow-1 mt-4">
-
+        <div class="row justify-content-end mt-4">
             <div class="col-md-3">
-                <label>Total Qty</label>
-                <input type="text" id="TotalQty" class="form-control" readonly />
-            </div>
-            <div class="col-md-3">
-                <label>Gross Total</label>
-                <input type="text" id="GrossTotal" class="form-control" readonly />
-            </div>
-            <div class="col-md-3">
-                <label>Add Charges</label>
-                <input type="text" id="AddCharges" class="form-control" value="0" />
-            </div>
-            <div class="col-md-3">
-                <label>Less Discount</label>
-                <input type="text" id="LessDiscount" class="form-control" value="0" />
-            </div>
-        </div>
-
-        <div class="row mt-2">
-            <div class="col-md-3">
-                <label>Net Total</label>
-                <input type="text" id="NetTotal" class="form-control" readonly />
+                <div class="mb-2">
+                    <label>Total Qty</label>
+                    <input type="text" id="TotalQty" class="form-control" readonly />
+                </div>
+                <div class="mb-2">
+                    <label>Gross Total</label>
+                    <input type="text" id="GrossTotal" class="form-control" readonly />
+                </div>
+                <div class="mb-2">
+                    <label>Add Charges</label>
+                    <input type="text" id="AddCharges" class="form-control" value="0" />
+                </div>
+                <div class="mb-2">
+                    <label>Less Discount</label>
+                    <input type="text" id="LessDiscount" class="form-control" value="0" />
+                </div>
+                <div class="mb-2">
+                    <label>Net Total</label>
+                    <input type="text" id="NetTotal" class="form-control" readonly />
+                </div>
+                
             </div>
         </div>
 
-        <div class="mt-4">
+
+        <div class="row justify-content-end mt-4">
+            <div class="col-md-3">
             <button type="button" class="btn btn-success" onclick="submitSales()">Save</button>
+                 <button type="button" class ="btn btn-primary" onclick="generateReport()">Generate Report</button> 
+             
+            </div>
         </div>
     </form>
 </div>
-
+@if (ViewBag.ReportViewer != null)
+{
+    @Html.Raw(ViewBag.ReportViewer.RenderHtml())
+    // this is where the RDLC renders
+}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    $(document).ready(function () {
+        // Initialize Select2 for both dropdowns
+        $('.select2').select2()
+    });
+</script>
+<div id="reportContainer">
+    <!-- The rendered report will be injected here -->
+</div>
+
+
+
+
+
+<script src="~/js/select2.min.js"></script>
+<script>
+  
     let saleItems = [];
 
     $('#ProductId').on('change', function () {
@@ -100,14 +124,14 @@
     function addToTable() {
         debugger;
         const prodId = $('#ProductId').val();
-        const prodName = $('#ProductId option:selected').text();
-        const qty = parseInt($('#Qty').val());
+        const ProductName = $('#ProductId option:selected').text();
+        const Quantity = parseInt($('#Qty').val());
         const rate = parseFloat($('#Rate').val());
 
-        if (!prodId || !qty || !rate) return alert("Please fill in all fields.");
+        if (!prodId || !Quantity || !rate) return alert("Please fill in all fields.");
 
-        const amount = qty * rate;
-        saleItems.push({ prodId, prodName, qty, rate, amount });
+        const amount = Quantity * rate;
+        saleItems.push({ prodId, ProductName, Quantity, rate, amount });
 
         updateTable();
     }
@@ -118,12 +142,13 @@
 
         let totalQty = 0, grossTotal = 0;
         saleItems.forEach((item, index) => {
-            totalQty += item.qty;
+            totalQty += item.Quantity;
             grossTotal += item.amount;
             tbody.append(`
                     <tr>
-                        <td>${item.prodName}</td>
-                        <td>${item.qty}</td>
+                        <td>${item.ProductName}</td>
+                                <td><input type="number" class="form-control qty-input" style="width: 200px;" value="${item.Quantity}" data-index="${index}" /></td>
+
                         <td>${item.rate}</td>
                         <td>${item.amount}</td>
                         <td><button class="btn btn-danger btn-sm" onclick="removeItem(${index})">Delete</button></td>
@@ -135,6 +160,16 @@
         $('#GrossTotal').val(grossTotal);
         calculateNetTotal();
     }
+    $(document).on('input', '.qty-input', function () {
+        const index = $(this).data('index');
+        const newQty = parseInt($(this).val());
+
+        if (!isNaN(newQty) && newQty > 0) {
+            saleItems[index].Quantity = newQty;
+            saleItems[index].amount = newQty * saleItems[index].rate;
+            updateTable();
+        }
+    });
 
     function removeItem(index) {
         saleItems.splice(index, 1);
@@ -174,3 +209,100 @@
     }
 </script>
 
+            <script>
+    // function generateReport() {
+    //     debugger;
+    //     const reportData = {
+    //         CustomerName: $('#CustomerId option:selected').text(),
+    //         SaleDate: $('#SaleDate').val(),
+    //         Products: saleItems,
+    //         TotalQty: parseInt($('#TotalQty').val()) || 0,
+    //         GrossTotal: parseFloat($('#GrossTotal').val()) || 0,
+    //         AddCharges: parseFloat($('#AddCharges').val()) || 0,
+    //         LessDiscount: parseFloat($('#LessDiscount').val()) || 0,
+    //         NetTotal: parseFloat($('#NetTotal').val()) || 0
+    //     };
+
+    //     $.ajax({
+    //         url: '/Home/ViewReport',
+    //         type: 'POST',
+    //         contentType: 'application/json',
+    //         data: JSON.stringify(reportData),
+    //         success: function (response) {
+    //             // Create modal to display report
+    //             const modalHtml = `
+    //                 <div class="modal fade" id="reportModal" tabindex="-1" role="dialog" aria-hidden="true">
+    //                     <div class="modal-dialog modal-xl" role="document">
+    //                         <div class="modal-content">
+    //                             <div class="modal-header">
+    //                                 <h5 class="modal-title">Sales Report</h5>
+    //                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    //                                     <span aria-hidden="true">&times;</span>
+    //                                 </button>
+    //                             </div>
+    //                             <div class="modal-body text-center">
+    //                                 <img src="data:image/png;base64,${response.base64Image}"
+    //                                      class="img-fluid"
+    //                                      alt="Generated Report" />
+    //                             </div>
+    //                             <div class="modal-footer">
+    //                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+    //                                 <button type="button" class="btn btn-primary" onclick="downloadReport()">
+    //                                     Download
+    //                                 </button>
+    //                             </div>
+    //                         </div>
+    //                     </div>
+    //                 </div>
+    //             `;
+
+    //             // Add to DOM and show
+    //             $('body').append(modalHtml);
+    //             $('#reportModal').modal('show');
+    //         },
+    //         error: function (xhr) {
+    //             alert('Error generating report: ' + xhr.responseText);
+    //         }
+    //     });
+    // }
+
+    // Optional: Add download functionality
+    function downloadReport() {
+        const link = document.createElement('a');
+        link.href = $('#reportModal img').attr('src');
+        link.download = 'SalesReport_' + new Date().toISOString().slice(0, 10) + '.png';
+        link.click();
+    }
+            </script>
+
+<script>
+    function generateReport() {
+        // Gather the report data from your form elements
+        debugger;
+        const reportData = {
+            CustomerName: $('#CustomerId option:selected').text(),
+            SaleDate: $('#SaleDate').val(),
+            Products: saleItems, // assuming saleItems is defined in your script
+            TotalQty: parseInt($('#TotalQty').val()) || 0,
+            GrossTotal: parseFloat($('#GrossTotal').val()) || 0,
+            AddCharges: parseFloat($('#AddCharges').val()) || 0,
+            LessDiscount: parseFloat($('#LessDiscount').val()) || 0,
+            NetTotal: parseFloat($('#NetTotal').val()) || 0
+        };
+
+        $.ajax({
+            url: '/Home/ViewReport',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(reportData),
+            success: function (response) {
+                debugger;
+                // Insert the rendered HTML directly into the placeholder div
+                $("#reportContainer").html(response.reportHtml);
+            },
+            error: function (xhr) {
+                alert('Error generating report: ' + xhr.responseText);
+            }
+        });
+    }
+</script>
