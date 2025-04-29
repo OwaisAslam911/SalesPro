@@ -90,81 +90,91 @@
     <script src="~/js/Toastify.js"></script>
     <script>
         $(document).ready(function () {
-            LoadUnits(); // When page loads, fetch all categories
+            $('.select2').select2();
+            LoadUnits(); 
+            $("#SaveUnit").click(function (event) {
+                event.preventDefault();
+                SaveUnit();
+            });
+            $("#UpdateUnit").click(function (event) {
+                event.preventDefault();
+                UpdateUnit();
+            })
         });
 
 
 
         function SaveUnit() {
+            debugger;
             event.preventDefault();
 
-            var CategoryCode = $("#CategoryCode").val();
-            var CategoryName = $("#CategoryName").val();
-            var CategoryAbbrevation = $("#CategoryAbbrevation").val();
+            var unitCode = $("#UnitCode").val();
+            var UnitName = $("#UnitName").val();
+            var Abbreviation = $("#Abbreviation").val();
 
-            if (CategoryCode == null || CategoryCode == "") {
-                showToastifyMessage("Please Enter Category Code", 'error');
-            } else if (CategoryName == "" || CategoryName == null) {
-                showToastifyMessage("Please Enter Category Name", 'error');
-            } else if (CategoryAbbrevation == null || CategoryAbbrevation == "") {
-                showToastifyMessage("Please Enter Category Abbreviation", 'error');
+            if (unitCode == null || unitCode == "") {
+                showToastifyMessage("Please Enter Unit Code", 'error');
+            } else if (UnitName == "" || UnitName == null) {
+                showToastifyMessage("Please Enter Unit Name", 'error');
+            } else if (Abbreviation == null || Abbreviation == "") {
+                showToastifyMessage("Please Enter Unit Abbreviation", 'error');
             } else {
                 var saveItems = {
-                    CategoryCode: CategoryCode,
-                    CategoryName: CategoryName,
-                    Abbreviation: CategoryAbbrevation
+                    UnitCode: unitCode,
+                    UnitName: UnitName,
+                    Abbreviation: Abbreviation
                 };
 
                 $.ajax({
                     type: "POST",
-                    url: "@Url.Action("SaveCategory", "InventrySetup")",
+                    url: "@Url.Action("SaveUnit", "InventrySetup")",
                     contentType: "application/json",
                     data: JSON.stringify(saveItems),
                     success: function (response) {
                         if (response.success) {
-                            showToastifyMessage('Category saved successfully!', 'success');
+                            showToastifyMessage('Unit saved successfully!', 'success');
 
-                            loadCategories();
+                            LoadUnits();
                             // ✅ Clear the form fields
-                            $("#CategoryCode").val('');
-                            $("#CategoryName").val('');
-                            $("#CategoryAbbrevation").val('');
+                            $("#UnitCode").val('');
+                            $("#UnitName").val('');
+                            $("#Abbreviation").val('');
                         } else {
                             showToastifyMessage('Error saving category.', 'error');
                         }
                     },
                     error: function () {
-                        showToastifyMessage('Error occurred while saving the category.', 'error');
+                        showToastifyMessage('Error occurred while saving the Unit.', 'error');
                     }
                 });
             }
         }
 
         function LoadUnits() {
-            // debugger;
+            debugger;
             $.ajax({
                 type: "GET",
-                url: "@Url.Action("GetBrands", "InventrySetup")", // new action
+                url: "@Url.Action("GetUnits", "InventrySetup")", // new action
                 success: function (response) {
-                    $("#BrandTableBody").empty(); // Clear previous rows if any
+                    $("#UnitTableBody").empty(); // Clear previous rows if any
 
-                    $.each(response, function (index, brand) {
+                    $.each(response, function (index, Units) {
                         var newRow = `
                                             <tr>
-                                                        <td>${brand.BrandId}</td>
-                                                        <td>${brand.BrandName}</td>
-                                                        <td>${brand.BrandCode}</td>
+                                                        <td>${Units.UnitCode}</td>
+                                                        <td>${Units.UnitName}</td>
+                                                        <td>${Units.Abbreviation}</td>
 
                                                         <td>
                                                                    <div>
-                                                                               <button type="submit" onclick="editBrand(${brand.BrandId})" class="btn btn-primary">edit</button>
-                                                                       <button type="submit" onclick="deleteBrand(${brand.BrandId})" class="btn btn-danger">Delete</button>
+                                                                               <button type="submit" onclick="editUnit(${Units.UnitId})" class="btn btn-primary">edit</button>
+                                                                       <button type="submit" onclick="deleteUnit(${Units.UnitId})" class="btn btn-danger">Delete</button>
 
                                                                     </div>
                                                         </td>
                                             </tr>
                                         `;
-                        $("#categoryTableBody").append(newRow);
+                        $("#UnitTableBody").append(newRow);
                     });
                 },
                 error: function () {
@@ -255,9 +265,9 @@
 
         function deleteUnit(UnitId) {
             if (confirm('Are you sure you want to delete this Unit?')) {
-                $.post('@Url.Action("DeleteBrand", "InventrySetup")', { BrandId: BrandId }, function (response) {
+                $.post('@Url.Action("DeleteUnit", "InventrySetup")', { UnitId: UnitId }, function (response) {
                     if (response.success) {
-                        LoadBrands();
+                        LoadUnits();
 
                     } else {
                         alert("Error Deleting Categories");

@@ -137,6 +137,17 @@ namespace SalesPro.Controllers
         {
             return View();
         }
+        [HttpGet]
+        public JsonResult GetUnits(Units unit)
+        {
+            var conn = configuration.GetConnectionString("dbcs");
+            using (var connection = new SqlConnection(conn))
+            {
+                string query = "Select * from Units";
+                var result = connection.Query(query).ToList();
+                return Json(result);
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> SaveUnit([FromBody] Units unit)
@@ -144,7 +155,7 @@ namespace SalesPro.Controllers
             var conn = configuration.GetConnectionString("dbcs");
             using(var connection = new SqlConnection(conn))
             {
-                var insertQuery = "Insert into Units (UnitId, UnitName, Abbreviation, UnitCode)Values(@unitId, @unitName, @abbreviation, @unitCode)";
+                var insertQuery = "Insert into Units ( UnitName, Abbreviation, UnitCode)Values(@unitName, @abbreviation, @unitCode)";
                 var result = await connection.ExecuteAsync(insertQuery,new { unitCode = unit.UnitCode, unitName = unit.UnitName, abbreviation = unit.Abbreviation });
                 if (result > 0)
                     return Json(new { success = true, message = "Unit of Measurment Saved Successfully!" });
@@ -166,7 +177,13 @@ namespace SalesPro.Controllers
         [HttpPost]
         public JsonResult DeleteUnit(string UnitId)
         {
-            return null;
+            var conn = configuration.GetConnectionString("dbcs");
+           using(var connection = new SqlConnection(conn))
+            {
+                string query = "Delete from Units where UnitId = @UnitId";
+                var result = connection.Execute(query, new {UnitId = UnitId});
+                return Json(new { success = true });
+            }
         }
 
         public IActionResult ItemSetup()
