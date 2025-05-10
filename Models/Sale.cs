@@ -56,6 +56,7 @@ public class SaleBillViewModel
     public decimal NetTotal => GrossTotal + AddCharges - Discount;
 
     public List<SaleItem> SaleItems { get; set; }
+
 }
 
 public class SaleItem
