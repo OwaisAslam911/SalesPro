@@ -1,0 +1,280 @@
+﻿
+@{
+    ViewData["Title"] = "RoleSetup";
+}
+
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form itemid="CreateUnits" method="post">
+                            <input type="hidden" id="RoleIdHidden" />
+
+                            <div class="form-validation">
+                                <div class="form-group row">
+                                    <label class="form-label col-lg-12" for="val-username">
+                                        Role Name<span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-12">
+                                        <input type="text" class="form-control" id="UnitCode" name="UnitCode" placeholder="Enter a Unit Code..">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="form-label col-lg-12" for="val-username">
+                                        Role Abbreviation <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-12">
+                                        <input type="text" class="form-control" id="UnitName" name="UnitName" placeholder="Enter a Brand Name..">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="form-label col-lg-12" for="val-username">
+                                        Unit Abbreviation <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-12">
+                                        <input type="text" class="form-control" id="Abbreviation" name="Abbreviation" placeholder="Enter a Brand Name..">
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-lg-8 ml-auto">
+                                        <button onclick="SaveUnit()" id="SaveUnit" class="btn btn-primary">Save Unit</button>
+                                        <button onclick="UpdateUnit()" id="UpdateUnit" class="btn btn-success d-none ">Update Brand</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Data Table</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered zero-configuration">
+                                <thead>
+                                    <tr>
+                                        <th>Unit Id</th>
+                                        <th>Unit Code</th>
+                                        <th>Unit Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="UnitTableBody">
+                                    <!-- New rows will be added here -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Unit Id</th>
+                                        <th>Unit Code</th>
+                                        <th>Unit Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/js/Toastify.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2();
+            LoadUnits();
+            $("#SaveUnit").click(function (event) {
+                event.preventDefault();
+                SaveUnit();
+            });
+            $("#UpdateUnit").click(function (event) {
+                event.preventDefault();
+                UpdateUnit();
+            })
+        });
+
+
+
+        function SaveUnit() {
+            debugger;
+            event.preventDefault();
+
+            var unitCode = $("#UnitCode").val();
+            var UnitName = $("#UnitName").val();
+            var Abbreviation = $("#Abbreviation").val();
+
+            if (unitCode == null || unitCode == "") {
+                showToastifyMessage("Please Enter Unit Code", 'error');
+            } else if (UnitName == "" || UnitName == null) {
+                showToastifyMessage("Please Enter Unit Name", 'error');
+            } else if (Abbreviation == null || Abbreviation == "") {
+                showToastifyMessage("Please Enter Unit Abbreviation", 'error');
+            } else {
+                var saveItems = {
+                    UnitCode: unitCode,
+                    UnitName: UnitName,
+                    Abbreviation: Abbreviation
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("SaveUnit", "InventrySetup")",
+                    contentType: "application/json",
+                    data: JSON.stringify(saveItems),
+                    success: function (response) {
+                        if (response.success) {
+                            showToastifyMessage('Unit saved successfully!', 'success');
+
+                            LoadUnits();
+                            // ✅ Clear the form fields
+                            $("#UnitCode").val('');
+                            $("#UnitName").val('');
+                            $("#Abbreviation").val('');
+                        } else {
+                            showToastifyMessage('Error saving category.', 'error');
+                        }
+                    },
+                    error: function () {
+                        showToastifyMessage('Error occurred while saving the Unit.', 'error');
+                    }
+                });
+            }
+        }
+
+        function LoadUnits() {
+            debugger;
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetUnits", "InventrySetup")", // new action
+                success: function (response) {
+                    $("#UnitTableBody").empty(); // Clear previous rows if any
+
+                    $.each(response, function (index, Units) {
+                        var newRow = `
+                                                    <tr>
+                                                                <td>${Units.UnitCode}</td>
+                                                                <td>${Units.UnitName}</td>
+                                                                <td>${Units.Abbreviation}</td>
+
+                                                                <td>
+                                                                           <div>
+                                                                                       <button type="submit" onclick="editUnit(${Units.UnitId})" class="btn btn-primary">edit</button>
+                                                                               <button type="submit" onclick="deleteUnit(${Units.UnitId})" class="btn btn-danger">Delete</button>
+
+                                                                            </div>
+                                                                </td>
+                                                    </tr>
+                                                `;
+                        $("#UnitTableBody").append(newRow);
+                    });
+                },
+                error: function () {
+                    showToastifyMessage('Failed to load categories.', 'error');
+                }
+            });
+        }
+        function editUnit(CategoryId) {
+            $("#SaveCategory").hide();
+            $("#updateCategory").removeClass("d-none").show();
+
+            // 🔥 Find the row where this CategoryId exists
+            var row = $("#categoryTableBody").find("tr").filter(function () {
+                return $(this).find("td:first").text() == CategoryId;
+            });
+
+            // ✅ Get values from that row
+            var categoryCode = row.find("td:nth-child(2)").text();
+            var categoryName = row.find("td:nth-child(3)").text();
+            var categoryAbbreviation = row.find("td:nth-child(4)").text();
+
+            // ✅ Put those values into the input fields
+            $("#CategoryCode").val(categoryCode);
+            $("#CategoryName").val(categoryName);
+            $("#CategoryAbbrevation").val(categoryAbbreviation);
+
+            // Optional: Store the CategoryId somewhere (hidden field) for updating
+            $("#CategoryIdHidden").val(CategoryId);
+        }
+
+        function UpdateUnit() {
+            event.preventDefault();
+
+            var CategoryCode = $("#CategoryCode").val();
+            var CategoryName = $("#CategoryName").val();
+            var CategoryAbbrevation = $("#CategoryAbbrevation").val();
+
+            if (CategoryCode == null || CategoryCode == "") {
+                showToastifyMessage("Please Enter Category Code", 'error');
+            } else if (CategoryName == "" || CategoryName == null) {
+                showToastifyMessage("Please Enter Category Name", 'error');
+            } else if (CategoryAbbrevation == null || CategoryAbbrevation == "") {
+                showToastifyMessage("Please Enter Category Abbreviation", 'error');
+            } else {
+                debugger;
+                var CategoryId = $("#CategoryIdHidden").val();
+                var CategoryCode = $("#CategoryCode").val();
+                var CategoryName = $("#CategoryName").val();
+                var CategoryAbbrevation = $("#CategoryAbbrevation").val();
+
+                var updateItems = {
+                    CategoryId: CategoryId,
+                    CategoryCode: CategoryCode,
+                    CategoryName: CategoryName,
+                    Abbreviation: CategoryAbbrevation
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/InventrySetup/UpdateBrand",
+                    contentType: "application/json",
+                    data: JSON.stringify(updateItems),
+                    success: function (response) {
+                        if (response.success) {
+                            showToastifyMessage('Category updated successfully!', 'success');
+                            loadCategories();
+
+                            // ✅ After update, clear fields
+                            $("#CategoryCode").val('');
+                            $("#CategoryName").val('');
+                            $("#CategoryAbbrevation").val('');
+                            $("#CategoryIdHidden").val('');
+
+                            // ✅ Switch buttons back
+                            $("#updateCategory").addClass("d-none").hide();
+                            $("#SaveCategory").show();
+                        } else {
+                            showToastifyMessage('Error updating category.', 'error');
+                        }
+                    },
+                    error: function () {
+                        showToastifyMessage('Error occurred while updating category.', 'error');
+                    }
+                });
+            }
+        }
+
+
+        function deleteUnit(UnitId) {
+            if (confirm('Are you sure you want to delete this Unit?')) {
+                $.post('@Url.Action("DeleteUnit", "InventrySetup")', { UnitId: UnitId }, function (response) {
+                    if (response.success) {
+                        LoadUnits();
+
+                    } else {
+                        alert("Error Deleting Categories");
+                    }
+                });
+            }
+        }
+    </script>
+}

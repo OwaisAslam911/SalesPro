@@ -29,9 +29,10 @@
   "bugs": {
     "url": "https://github.com/malsup/blockui/issues"
   },
-  "bundleDependencies": false,
+  "bundleDependencies": [],
   "dependencies": {
-    "jquery": ">=1.7.x"
+    "bootstrap": "^5.3.5",
+    "jquery": "^3.7.1"
   },
   "deprecated": false,
   "description": "Simulate synchronous ajax by blocking - not locking - the UI. This plugin lets you block user interaction with the page or with a specific element on the page. Also great at displaying modal dialogs.",

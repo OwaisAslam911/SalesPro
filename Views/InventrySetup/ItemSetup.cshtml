@@ -1,4 +1,4 @@
-﻿@model SalesPro.Models.Units
+﻿@model SalesPro.Models.Items
 @{
     ViewData["Title"] = "UnitSetup";
 }
@@ -14,32 +14,32 @@
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label for="itemCode" class="form-label">Item Code</label>
-                                    <input type="text" class="form-control" id="itemCode" placeholder="Enter Code">
+                                    <input type="text" class="form-control" name="ItemCode" id="ItemCode" placeholder="Enter Code">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="itemName" class="form-label">Item Name</label>
-                                    <input type="text" class="form-control" id="itemName" placeholder="Enter Name">
+                                    <input type="text" class="form-control" id="ItemName" name="ItemName" placeholder="Enter Name">
                                 </div>
                                 <div class="col-md-4">
                                    <label for="itemName" class="form-label">Stock type</label>
-                                    <input type="text" class="form-control" id="StockType" placeholder="Enter stock type">
+                                    <input type="text" class="form-control" id="StockType" name="StockType" placeholder="Enter stock type">
                                 </div>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label for="category" class="form-label">Category</label>
-                                    <select class="form-select select2" id="category">
+                                    <select class="form-select select2" name="CategoryId" id="Category"  asp-items="ViewBag.CategoryList">
                                         <option selected>Select Category</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="size" class="form-label">Size</label>
-                                    <input type="text" class="form-control" id="Size" placeholder="Enter stock size">
+                                    <input type="text" class="form-control" id="Size" name="Size" placeholder="Enter stock size">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="brand" class="form-label">Brand</label>
-                                    <select class="form-select select2" id="brand">
+                                    <select class="form-select select2" id="Brand" name="BrandId" asp-items="ViewBag.BrandList">
                                         <option selected>Select Brand</option>
                                     </select>
                                 </div>
@@ -48,39 +48,40 @@
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label for="packing" class="form-label">Packing</label>
-                                    <input type="text" class="form-control" id="packing" placeholder="Enter Packing">
+                                    <input type="text" class="form-control" id="Packing" name="Packing" placeholder="Enter Packing">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="sellingPrice" class="form-label">Selling Price</label>
-                                    <input type="text" class="form-control" id="sellingPrice" placeholder="Selling Price">
+                                    <input type="text" class="form-control" id="SellingPrice" name="SellingPrice" placeholder="Selling Price">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="openingBalance" class="form-label">Opening Balance</label>
-                                    <input type="text" class="form-control" id="openingBalance" placeholder="Enter Qty">
+                                    <input type="text" class="form-control" id="OpeningBalance" name="OpeningBalance" placeholder="Enter Opening Balance">
                                 </div>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col-md-3">
                                     <label for="uom" class="form-label">UOM</label>
-                                    <select class="form-select select2" id="uom">
+                                    <select class="form-select select2" id="uom" name="UnitId" asp-items="ViewBag.UnitList">
                                         <option selected>Select Unit of Measurment</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="costPrice" class="form-label">Cost Price</label>
-                                    <input type="text" class="form-control" id="costPrice" placeholder="Cost Price">
+                                    <input type="text" class="form-control" id="CostPrice" name="CostPrice" placeholder="Cost Price">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="amount" class="form-label">Amount</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="text" class="form-control" id="amount" value="0.00">
+                                        <input type="text" class="form-control" id="Amount" name="Amount" value="0.00">
                                     </div>
                                 </div>
                             </div>
                                 <div class="col-md-3 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-success w-100">Save Item</button>
+                                    <button id="SaveItem" class="btn btn-primary w-100">Save Item</button>
+                                    <button id="UpdateItem" class="btn btn-success w-100 d-none">Update Item</button>
                                 </div>
                         </form>
                     </div>
@@ -113,7 +114,7 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="BrandTableBody">
+                                <tbody id="ItemTableBody">
                                     <!-- New rows will be added here -->
                                 </tbody>
                                 <tfoot>
@@ -154,42 +155,95 @@
             LoadItems(); // When page loads, fetch all categories
         });
 
+        $("#SaveItem").click(function (event) {
+            event.preventDefault();
+            SaveItem();
+        });
+        $("#UpdateItem").click(function (event) {
+            event.preventDefault();
+            UpdateItem();
+        });
 
-
-        function SaveBrand() {
+        function SaveItem() {
             event.preventDefault();
 
-            var CategoryCode = $("#CategoryCode").val();
-            var CategoryName = $("#CategoryName").val();
-            var CategoryAbbrevation = $("#CategoryAbbrevation").val();
+            var ItemCode = $("#ItemCode").val();
+            var ItemName = $("#ItemName").val();
+            var StockType = $("#StockType").val();
+            var Category = $("#Category").val();
+            var Size = $("#Size").val();
+            var Brand = $("#Brand").val();
+            var Packing = $("#Packing").val();
+            var SellingPrice = $("#SellingPrice").val();
+            var OpeningBalance = $("#OpeningBalance").val();
+            var uom = $("#uom").val();
+            var CostPrice = $("#CostPrice").val();
+            var Amount = $("#Amount").val();
 
-            if (CategoryCode == null || CategoryCode == "") {
-                showToastifyMessage("Please Enter Category Code", 'error');
-            } else if (CategoryName == "" || CategoryName == null) {
-                showToastifyMessage("Please Enter Category Name", 'error');
-            } else if (CategoryAbbrevation == null || CategoryAbbrevation == "") {
-                showToastifyMessage("Please Enter Category Abbreviation", 'error');
+            if (ItemCode == null || ItemCode == "") {
+                showToastifyMessage("Please Enter Item Code", 'error');
+            } else if (ItemName == "" || ItemName == null) {
+                showToastifyMessage("Please Enter Item Name", 'error');
+            } else if (StockType == null || StockType == "") {
+                showToastifyMessage("Please Enter Stock Type", 'error');
+            } else if (Category == null || Category == "") {
+                showToastifyMessage("Please Select Category", 'error');
+            } else if (Size == null || Size == "") {
+                showToastifyMessage("Please enter Size", 'error');
+            } else if (Brand == null || Brand == "") {
+                showToastifyMessage("Please Select Brand", 'error');
+            } else if (Packing == null || Packing == "") {
+                showToastifyMessage("Please enter Packing", 'error');
+            } else if (SellingPrice == null || SellingPrice == "") {
+                showToastifyMessage("Please enter Selling Price", 'error');
+            } else if (OpeningBalance == null || OpeningBalance == "") {
+                showToastifyMessage("Please enter Opening Balance", 'error');
+            } else if (uom == null || uom == "") {
+                showToastifyMessage("Please enter Unit of Measurement", 'error');
+            } else if (CostPrice == null || CostPrice == "") {
+                showToastifyMessage("Please enter Cost Price", 'error');
+            } else if (Amount == null || Amount == "") {
+                showToastifyMessage("Please enter Amount", 'error');
             } else {
                 var saveItems = {
-                    CategoryCode: CategoryCode,
-                    CategoryName: CategoryName,
-                    Abbreviation: CategoryAbbrevation
+                    ItemCode: $("#ItemCode").val(),
+                    ItemName: $("#ItemName").val(),
+                    StockType: $("#StockType").val(),
+                    CategoryId: $("#Category").val(),
+                    Size: $("#Size").val(),
+                    BrandId: $("#Brand").val(),
+                    Packing: $("#Packing").val(),
+                    SellingPrice: $("#SellingPrice").val(),
+                    OpeningBalance: $("#OpeningBalance").val(),
+                    UnitId: $("#uom").val(),
+                    CostPrice: $("#CostPrice").val(),
+                    Amount: $("#Amount").val()
+                 
                 };
-
+                debugger;
+                console.log(saveItems);
                 $.ajax({
                     type: "POST",
-                    url: "@Url.Action("SaveCategory", "InventrySetup")",
+                    url: "@Url.Action("SaveItem", "InventrySetup")",
                     contentType: "application/json",
                     data: JSON.stringify(saveItems),
                     success: function (response) {
                         if (response.success) {
                             showToastifyMessage('Category saved successfully!', 'success');
 
-                            loadCategories();
+                            LoadItems();
                             // ✅ Clear the form fields
-                            $("#CategoryCode").val('');
-                            $("#CategoryName").val('');
-                            $("#CategoryAbbrevation").val('');
+                            $("#ItemCode").val('');
+                            $("#ItemName").val('');
+                            $("#StockType").val('');
+                            $("#Size").val('');
+                            $("#BrandId").val('');
+                            $("#Packing").val('');
+                            $("#OpeningBalance").val('');
+                            $("#SellingPrice").val('');
+                            $("#UnitId").val('');
+                            $("#CostPrice").val('');
+                            $("#Amount").val('');
                         } else {
                             showToastifyMessage('Error saving category.', 'error');
                         }
@@ -205,27 +259,37 @@
             // debugger;
             $.ajax({
                 type: "GET",
-                url: "@Url.Action("GetBrands", "InventrySetup")", // new action
+                url: "@Url.Action("GetItems", "InventrySetup")", // new action
                 success: function (response) {
-                    $("#BrandTableBody").empty(); // Clear previous rows if any
-
-                    $.each(response, function (index, brand) {
+                    $("#ItemTableBody").empty(); // Clear previous rows if any
+                    debugger;
+                    $.each(response, function (index, items) {
                         var newRow = `
                                                     <tr>
-                                                                <td>${brand.BrandId}</td>
-                                                                <td>${brand.BrandName}</td>
-                                                                <td>${brand.BrandCode}</td>
+                                                                <td>${items.ItemId}</td>
+                                                                <td>${items.ItemCode}</td>
+                                                                <td>${items.ItemName}</td>
+                                                                <td>${items.StockType}</td>
+                                                                <td>${items.CategoryName}</td>
+                                                                <td>${items.Size}</td>
+                                                                <td>${items.BrandName}</td>
+                                                                <td>${items.Packing}</td>
+                                                                <td>${items.SellingPrice}</td>
+                                                                <td>${items.OpeningBalance}</td>
+                                                                <td>${items.UnitName}</td>
+                                                                <td>${items.CostPrice}</td>
+                                                                <td>${items.Amount}</td>
 
                                                                 <td>
                                                                            <div>
-                                                                                       <button type="submit" onclick="editBrand(${brand.BrandId})" class="btn btn-primary">edit</button>
-                                                                               <button type="submit" onclick="deleteBrand(${brand.BrandId})" class="btn btn-danger">Delete</button>
+                                                                               <button type="submit" onclick="editItem(${items.ItemId})" class="btn btn-primary">edit</button>
+                                                                                       <button type="submit" onclick="deleteItem(${items.ItemId})" class="btn btn-danger">Delete</button>
 
                                                                             </div>
                                                                 </td>
                                                     </tr>
                                                 `;
-                        $("#categoryTableBody").append(newRow);
+                        $("#ItemTableBody").append(newRow);
                     });
                 },
                 error: function () {
@@ -233,73 +297,146 @@
                 }
             });
         }
-        function editBrand(CategoryId) {
-            $("#SaveCategory").hide();
-            $("#updateCategory").removeClass("d-none").show();
+        function editItem(ItemId) {
+            $("#SaveItem").hide();
+            $("#UpdateItem").removeClass("d-none").show();
 
-            // 🔥 Find the row where this CategoryId exists
-            var row = $("#categoryTableBody").find("tr").filter(function () {
-                return $(this).find("td:first").text() == CategoryId;
+            var row = $("#ItemTableBody").find("tr").filter(function () {
+                return $(this).find("td:first").text().trim() == ItemId;
             });
 
-            // ✅ Get values from that row
-            var categoryCode = row.find("td:nth-child(2)").text();
-            var categoryName = row.find("td:nth-child(3)").text();
-            var categoryAbbreviation = row.find("td:nth-child(4)").text();
+            var itemCode = row.find("td:nth-child(2)").text().trim();
+            var itemName = row.find("td:nth-child(3)").text().trim();
+            var stockType = row.find("td:nth-child(4)").text().trim();
+            var categoryText = row.find("td:nth-child(5)").text().trim();
+            var size = row.find("td:nth-child(6)").text().trim();
+            var brandText = row.find("td:nth-child(7)").text().trim();
+            var packing = row.find("td:nth-child(8)").text().trim();
+            var sellingPrice = row.find("td:nth-child(9)").text().trim();
+            var openingBalance = row.find("td:nth-child(10)").text().trim();
+            var uomText = row.find("td:nth-child(11)").text().trim();
+            var costPrice = row.find("td:nth-child(12)").text().trim();
+            var amount = row.find("td:nth-child(13)").text().trim();
 
-            // ✅ Put those values into the input fields
-            $("#CategoryCode").val(categoryCode);
-            $("#CategoryName").val(categoryName);
-            $("#CategoryAbbrevation").val(categoryAbbreviation);
+            $("#ItemCode").val(itemCode);
+            $("#ItemName").val(itemName);
+            $("#StockType").val(stockType);
+            $("#Size").val(size);
+            $("#Packing").val(packing);
+            $("#SellingPrice").val(sellingPrice);
+            $("#OpeningBalance").val(openingBalance);
+            $("#CostPrice").val(costPrice);
+            $("#Amount").val(amount);
+            $("#ItemIdHidden").val(ItemId);
 
-            // Optional: Store the CategoryId somewhere (hidden field) for updating
-            $("#CategoryIdHidden").val(CategoryId);
+          
+            var categoryVal = $("#Category option").filter(function () {
+                return $(this).text().trim() === categoryText;
+            }).val();
+            $("#Category").val(categoryVal).trigger('change');
+            var brandVal = $("#Brand option").filter(function () {
+                return $(this).text().trim() === brandText;
+            }).val();
+            $("#Brand").val(brandVal).trigger('change'); 
+            var uomVal = $("#uom option").filter(function () {
+                return $(this).text().trim() === uomText;
+            }).val();
+            $("#uom").val(uomVal).trigger('change');
         }
 
-        function UpdateBrand() {
+        
+
+        function UpdateItem() {
             event.preventDefault();
 
-            var CategoryCode = $("#CategoryCode").val();
-            var CategoryName = $("#CategoryName").val();
-            var CategoryAbbrevation = $("#CategoryAbbrevation").val();
+            var ItemCode = $("#ItemCode").val();
+            var ItemName = $("#ItemName").val();
+            var StockType = $("#StockType").val();
+            var Category = $("#Category").val();
+            var Size = $("#Size").val();
+            var Brand = $("#Brand").val();
+            var Packing = $("#Packing").val();
+            var SellingPrice = $("#SellingPrice").val();
+            var OpeningBalance = $("#OpeningBalance").val();
+            var uom = $("#uom").val();
+            var CostPrice = $("#CostPrice").val();
+            var Amount = $("#Amount").val();
 
-            if (CategoryCode == null || CategoryCode == "") {
-                showToastifyMessage("Please Enter Category Code", 'error');
-            } else if (CategoryName == "" || CategoryName == null) {
-                showToastifyMessage("Please Enter Category Name", 'error');
-            } else if (CategoryAbbrevation == null || CategoryAbbrevation == "") {
-                showToastifyMessage("Please Enter Category Abbreviation", 'error');
-            } else {
+            if (ItemCode == null || ItemCode == "") {
+                showToastifyMessage("Please Enter Item Code", 'error');
+            } else if (ItemName == "" || ItemName == null) {
+                showToastifyMessage("Please Enter Item Name", 'error');
+            } else if (StockType == null || StockType == "") {
+                showToastifyMessage("Please Enter Stock Type", 'error');
+            } else if (Category == null || Category == "") {
+                showToastifyMessage("Please Select Category", 'error');
+            } else if (Size == null || Size == "") {
+                showToastifyMessage("Please enter Size", 'error');
+            } else if (Brand == null || Brand == "") {
+                showToastifyMessage("Please Select Brand", 'error');
+            } else if (Packing == null || Packing == "") {
+                showToastifyMessage("Please enter Packing", 'error');
+            } else if (SellingPrice == null || SellingPrice == "") {
+                showToastifyMessage("Please enter Selling Price", 'error');
+            } else if (OpeningBalance == null || OpeningBalance == "") {
+                showToastifyMessage("Please enter Opening Balance", 'error');
+            } else if (uom == null || uom == "") {
+                showToastifyMessage("Please enter Unit of Measurement", 'error');
+            } else if (CostPrice == null || CostPrice == "") {
+                showToastifyMessage("Please enter Cost Price", 'error');
+            } else if (Amount == null || Amount == "") {
+                showToastifyMessage("Please enter Amount", 'error');
+            } else { 
                 debugger;
-                var CategoryId = $("#CategoryIdHidden").val();
-                var CategoryCode = $("#CategoryCode").val();
-                var CategoryName = $("#CategoryName").val();
-                var CategoryAbbrevation = $("#CategoryAbbrevation").val();
-
+               
                 var updateItems = {
-                    CategoryId: CategoryId,
-                    CategoryCode: CategoryCode,
-                    CategoryName: CategoryName,
-                    Abbreviation: CategoryAbbrevation
+                    ItemCode: $("#ItemCode").val(),
+                    ItemName: $("#ItemName").val(),
+                    StockType: $("#StockType").val(),
+                    CategoryId: $("#Category").val(),
+                    Size: $("#Size").val(),
+                    BrandId: $("#Brand").val(),
+                    Packing: $("#Packing").val(),
+                    SellingPrice: $("#SellingPrice").val(),
+                    OpeningBalance: $("#OpeningBalance").val(),
+                    UnitId: $("#uom").val(),
+                    CostPrice: $("#CostPrice").val(),
+                    Amount: $("#Amount").val()
                 };
 
                 $.ajax({
                     type: "POST",
-                    url: "/InventrySetup/UpdateBrand",
+                    url: "/InventrySetup/UpdateItem",
                     contentType: "application/json",
                     data: JSON.stringify(updateItems),
                     success: function (response) {
                         if (response.success) {
-                            showToastifyMessage('Category updated successfully!', 'success');
-                            loadCategories();
+                            showToastifyMessage('Item updated successfully!', 'success');
+                            LoadItems();
+                            debugger;
+                                // Reset Select2 dropdowns
 
-                            // ✅ After update, clear fields
-                            $("#CategoryCode").val('');
-                            $("#CategoryName").val('');
-                            $("#CategoryAbbrevation").val('');
-                            $("#CategoryIdHidden").val('');
+                            $("#Category").val('');
+                            $("#Category").trigger('change');
 
-                            // ✅ Switch buttons back
+                            $("#Brand").val('');
+                            $("#Brand").trigger('change');
+
+                            $("#uom").val('');
+                            $("#uom").trigger('change');
+                                // $("#Category").val('').trigger('change');
+                            $("#ItemCode").val('');
+                            $("#ItemName").val('');
+                            $("#StockType").val('');
+                            $("#Size").val('');
+                            // $("#BrandId").val('').trigger('change');
+                            $("#Packing").val('');
+                            $("#OpeningBalance").val('');
+                            $("#SellingPrice").val('');
+                            // $("#uom").val('').trigger('change');
+                            $("#CostPrice").val('');
+                            $("#Amount").val('');
+                            $("#ItemIdHidden").val('');
                             $("#updateCategory").addClass("d-none").hide();
                             $("#SaveCategory").show();
                         } else {
@@ -314,14 +451,14 @@
         }
 
 
-        function deleteBrand(BrandId) {
+        function deleteItem(ItemId) {
             if (confirm('Are you sure you want to delete this Item?')) {
-                $.post('@Url.Action("DeleteBrand", "InventrySetup")', { BrandId: BrandId }, function (response) {
+                $.post('@Url.Action("DeleteItem", "InventrySetup")', { ItemId: ItemId }, function (response) {
                     if (response.success) {
-                        LoadBrands();
+                        LoadItems();
 
                     } else {
-                        alert("Error Deleting Categories");
+                        alert("Error Deleting Item");
                     }
                 });
             }
